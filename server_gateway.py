@@ -11,6 +11,11 @@ sys.path.insert( 0, _ROOT_PATH)
 from utils import merge_predict, get_gpu_list
 from offline.local.predict import Inference
 
+temp_path = os.path.join( _ROOT_PATH, "temp")
+if not os.path.exists(temp_path):
+    os.mkdir(temp_path)
+
+
 def inferencer( offline_online, local_api, model_path, gpu_list_str):
     if offline_online == "offline":
         "离线模式：加载、推理本地文件、停止"
