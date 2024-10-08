@@ -15,8 +15,8 @@ def inferencer( offline_online, local_api, model_path, gpu_list_str):
     if offline_online == "offline":
         "离线模式：加载、推理本地文件、停止"
         gpu_list = get_gpu_list( gpu_list_str, must=True )
-        file_input_path = os.path.join( _ROOT_PATH, 'offline/temp/prompt_list.pickle')
-        file_output_path = os.path.join( _ROOT_PATH, 'offline/temp')
+        file_input_path = os.path.join( _ROOT_PATH, 'temp/prompt_list.pickle')
+        file_output_path = os.path.join( _ROOT_PATH, 'temp')
         if gpu_list != None:
             part_num = len( gpu_list )
             if local_api == "local":
