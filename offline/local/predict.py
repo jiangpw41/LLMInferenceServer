@@ -37,7 +37,19 @@ def get_interval_pair( prompt, part_id, part_num ):
     index_pair = split_list[part_id]
     return index_pair
 
-def Inference( part_id, part_num, gpu_id, model_path, file_input_path, file_output_path):
+def split_inner_list( prompt ):
+    # aaa = [i for i in range(99)]
+    inner_list = []
+    interval = []
+    for j in range( 0, len(prompt)+1, 10):
+        interval.append(j)
+    if len(prompt)%10 != 0:
+        interval.append(len(prompt))
+    for j in range(len(interval)-1):
+        inner_list.append( prompt[ interval[j]: interval[j+1] ])
+    return inner_list
+
+def Inference_offline_local( part_id, part_num, gpu_id, model_path, file_input_path, file_output_path, sample_little=None):
     # 加载Prompt，检查本地路径
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
     print( f"Load prompt list from {file_input_path}")
@@ -45,6 +57,10 @@ def Inference( part_id, part_num, gpu_id, model_path, file_input_path, file_outp
         prompt = pickle.load(f)
     if not os.path.exists(file_output_path):
         os.mkdir(file_output_path)
+
+    if sample_little!=None and isinstance( sample_little, int):
+        print(f"进行小样本推理：{sample_little}")
+        prompt = prompt[:sample_little]
     # 按照可用GPU进行分治
     index_pair = get_interval_pair( prompt, part_id, part_num)
     # 加载模型，在对应GPU上启动vllm引擎（在bash脚本中由环境变量指定GPU）
@@ -59,13 +75,21 @@ def Inference( part_id, part_num, gpu_id, model_path, file_input_path, file_outp
     print(f"No.{part_id} LLM Inderence start!")
     # 开始批处理
     part_result = []
-    for i in tqdm(range(index_pair[0], index_pair[1]), dynamic_ncols=True, file=sys.stdout, desc=f"Part {part_id} processing"):
-        
-        outputs = llm.generate(prompt[i], sampling_params, use_tqdm=False)   # 将输入提示添加到vLLM引擎的等待队列中，并执行vLLM发动机以生成高吞吐量的输出。输出以RequestOutput对象列表的形式返回，其中包括所有输出令牌。
-        ret = []
-        for output in outputs:
-            ret.append( output.outputs[0].text )
-        part_result.append( ret )
+    for i in range(index_pair[0], index_pair[1]):
+        if len(prompt[i])>10:
+            inner_list = split_inner_list( prompt[i] )
+            print( f"长度过长，分为{len(inner_list)}个长度为10的sub batch")
+        else:
+            inner_list = [ prompt[i] ]
+        # 推理
+        sub_total = []
+        for j in tqdm(range( len(inner_list) ), dynamic_ncols=True, file=sys.stdout, desc=f"第{part_id}部分：总共{ index_pair[1]- index_pair[0]}个Prompt中的第{i-index_pair[0]} 个processing"):
+            outputs = llm.generate(inner_list[j], sampling_params, use_tqdm=False)   # 将输入提示添加到vLLM引擎的等待队列中，并执行vLLM发动机以生成高吞吐量的输出。输出以RequestOutput对象列表的形式返回，其中包括所有输出令牌。
+            ret = []
+            for output in outputs:
+                ret.append( output.outputs[0].text )
+            sub_total.extend( ret )
+        part_result.append( sub_total )
         """
         part_result.append(i)
         time.sleep(0.1)

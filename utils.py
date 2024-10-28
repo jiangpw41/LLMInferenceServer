@@ -13,7 +13,7 @@ def get_gpu_list( gpu_list_str, must=True ):
 
 def merge_predict( part_num, _ROOT_PATH ):
     ret = []
-    file_output_path = os.path.join( _ROOT_PATH, 'offline/temp')
+    file_output_path = os.path.join( _ROOT_PATH, 'temp')
     for i in range(part_num):
         with open( os.path.join( file_output_path, str(i)), 'rb') as f:  
             part_data = pickle.load(f)
