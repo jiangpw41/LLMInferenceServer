@@ -1,0 +1,7 @@
+---
+# OpenAI的API格式配置
+API:
+  api_key: 'sk-SmOvH6kW2S5gQ1JJnAo7Q3nH1kGrFIzxWKUlAePQpYluS3Ko'
+  base_url: 'https://api.pro365.top/v1'
+  model_list:
+    'gpt-3.5-turbo'

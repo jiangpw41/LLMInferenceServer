@@ -1,15 +1,12 @@
 import os
-
 import pickle
 
 def get_gpu_list( gpu_list_str, must=True ):
-    if gpu_list_str:
+    if gpu_list_str != None:
         return list(map(int, gpu_list_str.split(',')))
     else:
-        if must:
-            raise Exception("Please Specify GPUs!")
-        else:
-            return None
+        print( "未指定GPU，默认为0号")
+        return [0]
 
 def merge_predict( part_num, _ROOT_PATH ):
     ret = []
@@ -18,6 +15,10 @@ def merge_predict( part_num, _ROOT_PATH ):
         with open( os.path.join( file_output_path, str(i)), 'rb') as f:  
             part_data = pickle.load(f)
         ret.extend( part_data )
-    with open( os.path.join( file_output_path, "predict_list.pickle"), 'wb') as f:  
+    save_path = os.path.join( file_output_path, "predict_list.pickle")
+    with open( save_path, 'wb') as f:  
         pickle.dump(ret, f)
+    
+    
+    
 
